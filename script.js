@@ -1,19 +1,17 @@
 $(function() {
-  //Parametres de la partie
+  //Objet partie
   var partie = {
-  joueur1: "",
-  joueur2: "",
-  score1: 0,
-  score2: 0,
-  nbPartie: 2,
-  curPartie: 1,
-  curPlayer: 1
+    joueur1: {nom: "", score: 0},
+    joueur2: {nom: "", score: 0},
+    nbPartie: 2,
+    curPartie: 1,
+    curPlayer: 1
   };
 
   //Case sur laquelle l'utilisateur a cliqué
   var curElement;
   //Utilisé pour signifier que la partie est terminée
-  var nextStep=false;
+  var endGame = false;
 
   //Objet qui contient les combinaisons gagnantes pour une cellule donnée
   var tabVerif = {
@@ -48,7 +46,7 @@ $(function() {
 
   //Rafraichir les statistiques: Num partie courante et scores
   function refreshStat() {
-    $("#bilan").html( "Partie " + partie.curPartie + "/" + partie.nbPartie + "<br>" + partie.joueur1 + ": " + partie.score1 + "<br>" + partie.joueur2 + ": " + partie.score2);
+    $("#bilan").html( "Partie " + partie.curPartie + "/" + partie.nbPartie + "<br>" + partie.joueur1.nom + ": " + partie.joueur1.score + "<br>" + partie.joueur2.nom + ": " + partie.joueur2.score);
   }
 
   //Reinitialiser le jeu
@@ -68,10 +66,10 @@ $(function() {
 
   //Clic de sauvegarde des parametres d'une partie
   $("#save-params").click( function() {
-    partie.joueur1 = $("#joueur1").val();
-    partie.joueur2 = $("#joueur2").val();
+    partie.joueur1.nom = $("#joueur1").val();
+    partie.joueur2.nom = $("#joueur2").val();
     partie.nbPartie = $("#nbparties").val();
-    $("#player").text( partie["joueur" + partie.curPlayer] );
+    $("#player").text( partie["joueur" + partie.curPlayer].nom );
     refreshPlay();
     refreshStat();
     $("#morpion").removeClass("hide");
@@ -82,9 +80,9 @@ $(function() {
 
   //Clic sur une case du morpion
   $("#morpion").click( function( e ) {
-    if( true == nextStep ) {
+    if( true == endGame ) {
       //On réinitialise la grille
-      nextStep = false;
+      endGame = false;
       refreshPlay();
       if( partie.curPartie < partie.nbPartie ) {
         //On passe à la partie suivante
@@ -93,39 +91,32 @@ $(function() {
       } else {
         //Finalisation de la partie
         $("#morpion").addClass("hide");
-        if( partie.score1 == partie.score2 ) {
+        if( partie.joueur1.score == partie.joueur2.score ) {
           //Egalité
-          $("#player").text( "Vous êtes à égaglité!" );
+          $("#player").text( "Vous êtes à égalité!" );
           $("#transition-egalite").removeClass("hide");
-          $("#transition-egalite .col-xs-12").addClass("player1");
-        } else if( partie.score1 > partie.score2) {
-          //Player 1 vainqueur
-          $("#transition-vainqueur").removeClass("hide");
-          $("#transition-vainqueur .col-xs-12").addClass("player1");
-          $("#player").text( partie["joueur" + partie.curPlayer] + " Président!" );
         } else {
-          //Player 2 vainqueur
+          var winner = partie.joueur1.score > partie.joueur2.score ? 1 : 2;
+          $("#player").text( partie["joueur" + winner].nom + " Président!" );
+          $("#transition-vainqueur .col-xs-12").addClass("player" + winner);
           $("#transition-vainqueur").removeClass("hide");
-          $("#transition-vainqueur .col-xs-12").addClass("player2");
-          $("#player").text( partie["joueur" + partie.curPlayer] + " Président!" );
         }
       }
 
       return;
     }
-    curElement = $("#" + e.target.id);
+    curElement = $("#" + e.target.id); //Récup case courrante
     if(  curElement.data("player") == 0 ) {
       curElement.data("player", partie.curPlayer);
       curElement.addClass("player" + partie.curPlayer);
-      console.log( testGagnant());
       if( testGagnant() ) {
-        partie["score" + partie.curPlayer]++;
+        partie["joueur" + partie.curPlayer].score++;
         refreshStat();
-        nextStep = true;
+        endGame = true;
         return;
       }
       partie.curPlayer = (partie.curPlayer % 2) + 1;
-      $("#player").text( partie["joueur" + partie.curPlayer] );
+      $("#player").text( partie["joueur" + partie.curPlayer].nom );
     }
   });
 
